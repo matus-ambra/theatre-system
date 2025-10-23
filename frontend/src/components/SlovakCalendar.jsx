@@ -111,7 +111,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
         console.log('Label creation cancelled')
         return
       }
-      
+
       const { label, workersNeeded } = result
       const workersNeededNum = parseInt(workersNeeded) || 3
       const existingData = data[date] || { workers: [] }
@@ -152,7 +152,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
         console.log('Label edit cancelled')
         return
       }
-      
+
       const { label, workersNeeded } = result
       const workersNeededNum = parseInt(workersNeeded) || 3
       const existingData = data[date] || { workers: [] }
@@ -172,15 +172,15 @@ const SlovakCalendar = ({ user, onLogout }) => {
 
   const pickWorker = async (date, workerName) => {
     if (!data[date]) return
-    
+
     const existingData = data[date]
-    
+
     // Check if worker is already assigned to this date
     if (existingData.workers && existingData.workers.includes(workerName)) {
       await showModal(`Uvádzač ${workerName} je už priradený k tomuto dňu.`, 'alert')
       return
     }
-    
+
     const newWorkers = [...(existingData.workers || []), workerName]
     await saveData(date, { label: existingData.label, workers: newWorkers, workersNeeded: existingData.workersNeeded })
   }
@@ -192,7 +192,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
     const formattedDate = `${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()}`
     const confirmed = await showModal(`Naozaj chcete odstrániť uvádzača ${workerName} z dňa ${formattedDate} (${dayData.label})?`, 'confirm')
     if (!confirmed) return
-    
+
     const existingData = data[date]
     const newWorkers = existingData.workers.filter((_, idx) => idx !== workerIndex)
     await saveData(date, { label: existingData.label, workers: newWorkers, workersNeeded: existingData.workersNeeded })
@@ -202,16 +202,16 @@ const SlovakCalendar = ({ user, onLogout }) => {
   const exportMyCalendar = async (workerName, yearMonth) => {
     try {
       // Fetch worker assignments for the specific month
-      const response = await api.post(`/api/worker-schedule/${workerName}/${yearMonth}`, {}, getAuthHeaders())
+      const response = await api.get(`/api/worker-schedule/${workerName}/${yearMonth}`, {}, getAuthHeaders())
       const assignments = response.data
-      
+
       if (assignments.length === 0) {
         await showModal(`Nemáte žiadne naplánované úlohy pre ${yearMonth}.`, 'alert')
         return
       }
-      
+
       const icsContent = generateICSWithAssignments(workerName, assignments)
-      
+
       // Create and download the ICS file
       const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' })
       const url = URL.createObjectURL(blob)
@@ -222,15 +222,15 @@ const SlovakCalendar = ({ user, onLogout }) => {
       link.click()
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
-      
+
       await showModal(`Váš kalendár (${yearMonth}) bol úspešne exportovaný. Súbor môžete importovať do Apple Calendar alebo inej kalendárovej aplikácie.`, 'alert')
-      
+
     } catch (error) {
       console.error('Error exporting calendar:', error)
       await showModal('Nastala chyba pri exportovaní kalendára. Skúste to znovu.', 'alert')
     }
   }
-  
+
   const generateICSWithAssignments = (workerName, assignments) => {
     const icsContent = [
       'BEGIN:VCALENDAR',
@@ -243,7 +243,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
     assignments.forEach((assignment, index) => {
       const eventId = `worker-${workerName}-${assignment.date}-${index}`
       const startDate = assignment.date.replace(/-/g, '')
-      
+
       icsContent.push(
         'BEGIN:VEVENT',
         `UID:${eventId}@lakomika.sk`,
@@ -256,7 +256,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
         'END:VEVENT'
       )
     })
-    
+
     icsContent.push('END:VCALENDAR')
     return icsContent.join('\r\n')
   }
@@ -280,10 +280,10 @@ const SlovakCalendar = ({ user, onLogout }) => {
         } else {
           const dateStr = formatDate(new Date(year, month, day))
           const today = new Date()
-          const isToday = today.getFullYear() === year && 
-                         today.getMonth() === month && 
+          const isToday = today.getFullYear() === year &&
+                         today.getMonth() === month &&
                          today.getDate() === day
-          
+
           days.push(
             <td key={dateStr} className={isToday ? 'today' : ''}>
               <strong style={{ marginBottom: '8px', display: 'block' }}>{day}</strong>
@@ -304,24 +304,24 @@ const SlovakCalendar = ({ user, onLogout }) => {
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
     const daysInMonth = new Date(year, month + 1, 0).getDate()
-    
+
     const mobileCards = []
-    
+
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = formatDate(new Date(year, month, day))
       const today = new Date()
-      const isToday = today.getFullYear() === year && 
-                     today.getMonth() === month && 
+      const isToday = today.getFullYear() === year &&
+                     today.getMonth() === month &&
                      today.getDate() === day
       const dayData = data[dateStr]
       const dayOfWeek = new Date(year, month, day).getDay()
       const dayName = dayNames[dayOfWeek === 0 ? 6 : dayOfWeek - 1]
-      
+
       // Only show days that have events or are today, or if user is admin
       if (!dayData && !isToday && user.role !== 'admin') {
         continue
       }
-      
+
       mobileCards.push(
         <div key={dateStr} className={`mobile-day-card ${isToday ? 'mobile-today' : ''}`}>
           <div className="mobile-day-header">
@@ -337,7 +337,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
         </div>
       )
     }
-    
+
     return mobileCards
   }
 
@@ -348,7 +348,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
 
   const renderDayContent = (dateStr) => {
     const dayData = data[dateStr]
-    
+
     if (dayData) {
       return (
         <>
@@ -358,8 +358,8 @@ const SlovakCalendar = ({ user, onLogout }) => {
             const isDeleted = !workersList[workerName] // Check if worker was deleted from list
             return (
               <div key={idx} className="worker">
-                <span 
-                  style={{ 
+                <span
+                  style={{
                     backgroundColor: color,
                     opacity: isDeleted ? 0.6 : 1,
                     fontStyle: isDeleted ? 'italic' : 'normal'
@@ -375,7 +375,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
             )
           })}
           {user.role === 'worker' && dayData.workers.length < (dayData.workersNeeded || 2) && (
-            <select 
+            <select
               onChange={(e) => {
                 if (e.target.value) {
                   pickWorker(dateStr, e.target.value)
@@ -423,8 +423,8 @@ const SlovakCalendar = ({ user, onLogout }) => {
   const [showTheatreManagement, setShowTheatreManagement] = useState(false)
 
   if (showEditWorkers && user.role === 'admin') {
-    return <EditWorkers 
-      workersList={workersList} 
+    return <EditWorkers
+      workersList={workersList}
       setWorkersList={setWorkersList}
       onSave={loadWorkers}
       onCancel={() => {
@@ -437,7 +437,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
   }
 
   if (showTheatreManagement && user.role === 'admin') {
-    return <TheatreManagement 
+    return <TheatreManagement
       onCancel={() => {
         setShowTheatreManagement(false)
         setShowAdminDashboard(true)
@@ -449,9 +449,9 @@ const SlovakCalendar = ({ user, onLogout }) => {
 
   if (showAdminDashboard && user.role === 'admin') {
     return (
-      <div style={{ 
-        padding: isMobile ? '20px' : '40px', 
-        display: 'flex', 
+      <div style={{
+        padding: isMobile ? '20px' : '40px',
+        display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
@@ -471,17 +471,17 @@ const SlovakCalendar = ({ user, onLogout }) => {
           width: isMobile ? '100%' : 'auto',
           maxWidth: isMobile ? '100%' : 'none'
         }}>
-          <img 
-            src="/lakomika-logo.svg" 
-            alt="LA KOMIKA" 
-            style={{ 
-              height: isMobile ? '80px' : '100px', 
-              width: 'auto', 
-              marginBottom: isMobile ? '16px' : '20px' 
+          <img
+            src="/lakomika-logo.svg"
+            alt="LA KOMIKA"
+            style={{
+              height: isMobile ? '80px' : '100px',
+              width: 'auto',
+              marginBottom: isMobile ? '16px' : '20px'
             }}
           />
-          <h1 style={{ 
-            color: '#8B1538', 
+          <h1 style={{
+            color: '#8B1538',
             margin: 0,
             fontSize: isMobile ? '1.5rem' : '2rem',
             fontWeight: 'bold',
@@ -490,7 +490,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
             Administrátorský panel
           </h1>
         </div>
-        
+
         {/* Button grid */}
         <div style={{
           display: 'grid',
@@ -534,12 +534,12 @@ const SlovakCalendar = ({ user, onLogout }) => {
               e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.2)'
             }}
           >
-            <div style={{ 
+            <div style={{
               fontSize: isMobile ? '2.5rem' : '3rem',
               lineHeight: '1'
             }}>👕</div>
-            <h3 style={{ 
-              color: '#8B1538', 
+            <h3 style={{
+              color: '#8B1538',
               margin: 0,
               fontSize: isMobile ? '1.2rem' : '1.4rem',
               fontWeight: 'bold',
@@ -549,7 +549,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
               Spravovať<br />uvádzačov
             </h3>
           </button>
-          
+
           {/* Theatre Management Button */}
           <button
             onClick={() => {
@@ -583,12 +583,12 @@ const SlovakCalendar = ({ user, onLogout }) => {
               e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.2)'
             }}
           >
-            <div style={{ 
+            <div style={{
               fontSize: isMobile ? '2.5rem' : '3rem',
               lineHeight: '1'
             }}>🎭</div>
-            <h3 style={{ 
-              color: '#8B1538', 
+            <h3 style={{
+              color: '#8B1538',
               margin: 0,
               fontSize: isMobile ? '1.2rem' : '1.4rem',
               fontWeight: 'bold',
@@ -599,14 +599,14 @@ const SlovakCalendar = ({ user, onLogout }) => {
             </h3>
           </button>
         </div>
-        
+
         {/* Logout button */}
-        <div style={{ 
+        <div style={{
           marginTop: isMobile ? '30px' : '50px',
           display: 'flex',
           justifyContent: 'center'
         }}>
-          <button 
+          <button
             onClick={onLogout}
             style={{
               background: 'rgba(255,255,255,0.2)',
@@ -639,13 +639,13 @@ const SlovakCalendar = ({ user, onLogout }) => {
 
   return (
     <div id="calendar-container">
-      <div className="nav" style={{ 
+      <div className="nav" style={{
         display: 'grid',
         gridTemplateColumns: '1fr auto 1fr',
-        alignItems: 'center', 
-        background: 'rgba(255,255,255,0.9)', 
-        padding: '15px 20px', 
-        borderRadius: '12px', 
+        alignItems: 'center',
+        background: 'rgba(255,255,255,0.9)',
+        padding: '15px 20px',
+        borderRadius: '12px',
         marginBottom: '20px',
         backdropFilter: 'blur(8px)',
         boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
@@ -659,15 +659,15 @@ const SlovakCalendar = ({ user, onLogout }) => {
           )}
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <img 
-            src="/lakomika-logo.svg" 
-            alt="LA KOMIKA" 
+          <img
+            src="/lakomika-logo.svg"
+            alt="LA KOMIKA"
             style={{ height: '90px', width: 'auto' }}
           />
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           {user.role === 'admin' ? (
-            <button 
+            <button
               onClick={() => setShowAdminDashboard(true)}
               style={{
                 background: 'rgba(139, 21, 56, 0.1)',
@@ -715,9 +715,9 @@ const SlovakCalendar = ({ user, onLogout }) => {
           borderRadius: '12px',
           border: '2px solid rgba(139, 21, 56, 0.15)'
         }}>
-          <span style={{ 
-            fontSize: '1.4rem', 
-            fontWeight: 'bold', 
+          <span style={{
+            fontSize: '1.4rem',
+            fontWeight: 'bold',
             color: '#8B1538',
             textShadow: '0 1px 2px rgba(139, 21, 56, 0.1)',
             letterSpacing: '1px',
@@ -753,14 +753,14 @@ const SlovakCalendar = ({ user, onLogout }) => {
             {renderCalendar()}
           </tbody>
         </table>
-        
+
         <div className="mobile-calendar">
           {renderMobileCalendar()}
         </div>
       </div>
 
       {modalProps && <Modal {...modalProps} />}
-      
+
       {/* Calendar Export Modal for Workers */}
       {showExportModal && user.role === 'worker' && (
         <div style={{
@@ -786,16 +786,16 @@ const SlovakCalendar = ({ user, onLogout }) => {
             <h3 style={{ marginBottom: '15px', color: '#8B1538' }}>
               Exportovať kalendár
             </h3>
-            
+
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#555' }}>Vyberte uvádzača:</label>
-              <select 
+              <select
                 value={selectedWorkerForExport}
                 onChange={(e) => setSelectedWorkerForExport(e.target.value)}
-                style={{ 
-                  width: '100%', 
-                  padding: '8px 12px', 
-                  borderRadius: '6px', 
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
                   border: '1px solid #ccc',
                   fontSize: '14px',
                   boxSizing: 'border-box',
@@ -808,17 +808,17 @@ const SlovakCalendar = ({ user, onLogout }) => {
                 ))}
               </select>
             </div>
-            
+
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#555' }}>Vyberte mesiac:</label>
               <input
                 type="month"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                style={{ 
-                  width: '100%', 
-                  padding: '8px 12px', 
-                  borderRadius: '6px', 
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
                   border: '1px solid #ccc',
                   fontSize: '14px',
                   boxSizing: 'border-box',
@@ -826,33 +826,33 @@ const SlovakCalendar = ({ user, onLogout }) => {
                 }}
               />
             </div>
-            
+
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button 
+              <button
                 onClick={() => setShowExportModal(false)}
-                style={{ 
-                  padding: '8px 16px', 
-                  borderRadius: '6px', 
-                  border: '1px solid #ccc', 
-                  background: '#fff', 
-                  color: '#555', 
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid #ccc',
+                  background: '#fff',
+                  color: '#555',
                   cursor: 'pointer'
                 }}
               >
                 Zrušiť
               </button>
-              <button 
+              <button
                 onClick={() => {
                   exportMyCalendar(selectedWorkerForExport, selectedMonth)
                   setShowExportModal(false)
                 }}
                 disabled={!selectedWorkerForExport}
-                style={{ 
-                  padding: '8px 16px', 
-                  borderRadius: '6px', 
-                  border: 'none', 
-                  background: selectedWorkerForExport ? '#8B1538' : '#ccc', 
-                  color: '#fff', 
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: selectedWorkerForExport ? '#8B1538' : '#ccc',
+                  color: '#fff',
                   cursor: selectedWorkerForExport ? 'pointer' : 'not-allowed',
                   fontSize: '14px',
                   fontWeight: '500'
@@ -861,11 +861,11 @@ const SlovakCalendar = ({ user, onLogout }) => {
                 Stiahnuť
               </button>
             </div>
-            
-            <p style={{ 
-              fontSize: '12px', 
-              color: '#666', 
-              marginTop: '10px', 
+
+            <p style={{
+              fontSize: '12px',
+              color: '#666',
+              marginTop: '10px',
               lineHeight: '1.4'
             }}>
               💡 Stiahnite si .ics súbor a otvorte ho v Apple Calendar, Google Calendar, Outlook alebo inej kalendárovej aplikácii.
@@ -929,14 +929,14 @@ const EditWorkers = ({ workersList, setWorkersList, onSave, onCancel, user, show
 
   const removeWorker = async (name) => {
     if (!isOpen) return
-    
+
     const newWorkers = { ...workers }
     delete newWorkers[name]
     setWorkers(newWorkers)
     await autoSaveWorkers(newWorkers)
     setConfirmingDelete(null)
   }
-  
+
   const cancelDelete = () => {
     setConfirmingDelete(null)
   }
@@ -955,7 +955,7 @@ const EditWorkers = ({ workersList, setWorkersList, onSave, onCancel, user, show
         {Object.entries(workers).map(([name, color]) => (
           <div key={name} className="worker-row" style={{ alignItems: 'center', marginBottom: '12px', padding: '8px', border: '1px solid #eee', borderRadius: '6px', backgroundColor: '#fafafa' }}>
             <span style={{ flexGrow: 1, marginRight: '15px', fontWeight: '500' }}>{name}</span>
-            
+
             {/* Color selection bubbles */}
             <div style={{ display: 'flex', gap: '6px', marginRight: '15px' }}>
               {availableColors.map(c => (
@@ -977,31 +977,31 @@ const EditWorkers = ({ workersList, setWorkersList, onSave, onCancel, user, show
                 />
               ))}
             </div>
-            
+
             {confirmingDelete === name ? (
               <div style={{ display: 'flex', gap: '4px' }}>
-                <button 
+                <button
                   onClick={() => removeWorker(name)}
-                  style={{ 
-                    background: '#ff4d4f', 
-                    color: '#fff', 
-                    border: 'none', 
-                    borderRadius: '4px', 
-                    width: '24px', 
+                  style={{
+                    background: '#ff4d4f',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    width: '24px',
                     height: '24px',
                     cursor: 'pointer',
                     fontSize: '12px'
                   }}
                   title="Potvrdiť vymazanie"
                 >✓</button>
-                <button 
+                <button
                   onClick={cancelDelete}
-                  style={{ 
-                    background: '#ccc', 
-                    color: '#333', 
-                    border: 'none', 
-                    borderRadius: '4px', 
-                    width: '24px', 
+                  style={{
+                    background: '#ccc',
+                    color: '#333',
+                    border: 'none',
+                    borderRadius: '4px',
+                    width: '24px',
                     height: '24px',
                     cursor: 'pointer',
                     fontSize: '12px'
@@ -1010,14 +1010,14 @@ const EditWorkers = ({ workersList, setWorkersList, onSave, onCancel, user, show
                 >×</button>
               </div>
             ) : (
-              <button 
-                onClick={() => setConfirmingDelete(name)} 
-                style={{ 
-                  background: '#ff4d4f', 
-                  color: '#fff', 
-                  border: 'none', 
-                  borderRadius: '4px', 
-                  width: '28px', 
+              <button
+                onClick={() => setConfirmingDelete(name)}
+                style={{
+                  background: '#ff4d4f',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  width: '28px',
                   height: '28px',
                   cursor: 'pointer',
                   fontSize: '16px'
@@ -1028,10 +1028,10 @@ const EditWorkers = ({ workersList, setWorkersList, onSave, onCancel, user, show
           </div>
         ))}
       </div>
-      
+
       <div style={{ marginTop: '20px', padding: '15px', border: '2px dashed #ddd', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
         <h3 style={{ marginBottom: '10px', color: '#555' }}>Pridávať nového uvádzača</h3>
-        
+
         <div style={{ marginBottom: '10px' }}>
           <input
             type="text"
@@ -1040,17 +1040,17 @@ const EditWorkers = ({ workersList, setWorkersList, onSave, onCancel, user, show
             value={newWorkerName}
             onChange={(e) => setNewWorkerName(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && addWorker()}
-            style={{ 
-              width: '100%', 
-              padding: '8px 12px', 
-              borderRadius: '6px', 
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '6px',
               border: '1px solid #ccc',
               fontSize: '14px',
               boxSizing: 'border-box'
             }}
           />
         </div>
-        
+
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#555' }}>Vyberte farbu:</label>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1075,16 +1075,16 @@ const EditWorkers = ({ workersList, setWorkersList, onSave, onCancel, user, show
             ))}
           </div>
         </div>
-        
-        <button 
-          onClick={addWorker} 
+
+        <button
+          onClick={addWorker}
           disabled={!newWorkerName.trim()}
-          style={{ 
-            padding: '8px 16px', 
-            borderRadius: '6px', 
-            border: 'none', 
-            background: newWorkerName.trim() ? '#2ecc71' : '#ccc', 
-            color: '#fff', 
+          style={{
+            padding: '8px 16px',
+            borderRadius: '6px',
+            border: 'none',
+            background: newWorkerName.trim() ? '#2ecc71' : '#ccc',
+            color: '#fff',
             cursor: newWorkerName.trim() ? 'pointer' : 'not-allowed',
             fontSize: '14px',
             fontWeight: '500'
@@ -1093,8 +1093,8 @@ const EditWorkers = ({ workersList, setWorkersList, onSave, onCancel, user, show
           + Pridať uvádzača
         </button>
       </div>
-      
-      
+
+
       <div style={{ marginTop: '20px', textAlign: 'right' }}>
         <button onClick={() => { setIsOpen(false); onCancel(); }} style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #ccc', background: '#fff', color: '#555', cursor: 'pointer' }}>Zavrieť</button>
       </div>
@@ -1148,7 +1148,7 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
   }
 
   if (currentView === 'actors') {
-    return <ActorList 
+    return <ActorList
       actors={actors}
       setActors={setActors}
       onBack={() => setCurrentView('dashboard')}
@@ -1158,7 +1158,7 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
   }
 
   if (currentView === 'availability') {
-    return <ActorAvailability 
+    return <ActorAvailability
       actors={actors}
       actorAvailability={actorAvailability}
       setActorAvailability={setActorAvailability}
@@ -1169,7 +1169,7 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
   }
 
   if (currentView === 'repertoire') {
-    return <PlayRepertoire 
+    return <PlayRepertoire
       plays={plays}
       setPlays={setPlays}
       actors={actors}
@@ -1180,7 +1180,7 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
   }
 
   if (currentView === 'planner') {
-    return <PlayPlanner 
+    return <PlayPlanner
       plays={plays}
       actors={actors}
       actorAvailability={actorAvailability}
@@ -1192,9 +1192,9 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
 
   // Dashboard view
   return (
-    <div style={{ 
-      padding: isMobile ? '20px' : '40px', 
-      display: 'flex', 
+    <div style={{
+      padding: isMobile ? '20px' : '40px',
+      display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
@@ -1203,13 +1203,13 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
       boxSizing: 'border-box'
     }}>
         {/* Header */}
-        <div style={{ 
+        <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr auto 1fr',
-          alignItems: 'center', 
-          background: 'rgba(255,255,255,0.9)', 
-          padding: isMobile ? '12px 16px' : '15px 20px', 
-          borderRadius: '12px', 
+          alignItems: 'center',
+          background: 'rgba(255,255,255,0.9)',
+          padding: isMobile ? '12px 16px' : '15px 20px',
+          borderRadius: '12px',
           marginBottom: isMobile ? '16px' : '20px',
           backdropFilter: 'blur(8px)',
           boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
@@ -1218,14 +1218,14 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
         }}>
           <div></div>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <img 
-              src="/lakomika-logo.svg" 
-              alt="LA KOMIKA" 
+            <img
+              src="/lakomika-logo.svg"
+              alt="LA KOMIKA"
               style={{ height: isMobile ? '70px' : '90px', width: 'auto' }}
             />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button 
+            <button
               onClick={onCancel}
               style={{
                 background: 'rgba(139, 21, 56, 0.1)',
@@ -1242,7 +1242,7 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
             </button>
           </div>
       </div>
-      
+
       {/* Mini-apps grid */}
       <div style={{
         display: 'grid',
@@ -1279,16 +1279,16 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
         >
           <div style={{ fontSize: '3rem' }}>👥</div>
           <div>
-            <h3 style={{ 
-              color: '#8B1538', 
+            <h3 style={{
+              color: '#8B1538',
               margin: '0 0 8px 0',
               fontSize: '1.3rem',
               fontWeight: 'bold'
             }}>
               Zoznam hercov
             </h3>
-            <p style={{ 
-              color: '#666', 
+            <p style={{
+              color: '#666',
               margin: 0,
               textAlign: 'center',
               fontSize: '0.9rem',
@@ -1327,16 +1327,16 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
         >
           <div style={{ fontSize: '3rem' }}>📅</div>
           <div>
-            <h3 style={{ 
-              color: '#8B1538', 
+            <h3 style={{
+              color: '#8B1538',
               margin: '0 0 8px 0',
               fontSize: '1.3rem',
               fontWeight: 'bold'
             }}>
               Dostupnosť hercov
             </h3>
-            <p style={{ 
-              color: '#666', 
+            <p style={{
+              color: '#666',
               margin: 0,
               textAlign: 'center',
               fontSize: '0.9rem',
@@ -1375,16 +1375,16 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
         >
           <div style={{ fontSize: '3rem' }}>📜</div>
           <div>
-            <h3 style={{ 
-              color: '#8B1538', 
+            <h3 style={{
+              color: '#8B1538',
               margin: '0 0 8px 0',
               fontSize: '1.3rem',
               fontWeight: 'bold'
             }}>
               Repertoár hier
             </h3>
-            <p style={{ 
-              color: '#666', 
+            <p style={{
+              color: '#666',
               margin: 0,
               textAlign: 'center',
               fontSize: '0.9rem',
@@ -1423,16 +1423,16 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
         >
           <div style={{ fontSize: '3rem' }}>🎨</div>
           <div>
-            <h3 style={{ 
-              color: '#8B1538', 
+            <h3 style={{
+              color: '#8B1538',
               margin: '0 0 8px 0',
               fontSize: '1.3rem',
               fontWeight: 'bold'
             }}>
               Plánovač hier
             </h3>
-            <p style={{ 
-              color: '#666', 
+            <p style={{
+              color: '#666',
               margin: 0,
               textAlign: 'center',
               fontSize: '0.9rem',
@@ -1450,7 +1450,7 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
 // Actor List Component
 const ActorList = ({ actors, setActors, onBack, user, showModal }) => {
   const [newActorName, setNewActorName] = useState('')
-  
+
   const getAuthHeaders = () => ({
     headers: { Authorization: `Bearer ${user.token}` }
   })
@@ -1481,22 +1481,22 @@ const ActorList = ({ actors, setActors, onBack, user, showModal }) => {
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ 
+      <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr auto 1fr',
-        alignItems: 'center', 
-        background: 'rgba(255,255,255,0.9)', 
-        padding: '15px 20px', 
-        borderRadius: '12px', 
+        alignItems: 'center',
+        background: 'rgba(255,255,255,0.9)',
+        padding: '15px 20px',
+        borderRadius: '12px',
         marginBottom: '20px',
         backdropFilter: 'blur(8px)',
         boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
       }}>
         <div></div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <img 
-            src="/lakomika-logo.svg" 
-            alt="LA KOMIKA" 
+          <img
+            src="/lakomika-logo.svg"
+            alt="LA KOMIKA"
             style={{ height: '90px', width: 'auto' }}
           />
         </div>
@@ -1631,7 +1631,7 @@ const ActorAvailability = ({ actors, actorAvailability, setActorAvailability, on
 
   const loadActorAvailability = async () => {
     if (!selectedActor) return
-    
+
     const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
     try {
       const response = await axios.post(`/api/actor-availability/${selectedActor}/${yearMonth}`, {}, getAuthHeaders())
@@ -1644,21 +1644,21 @@ const ActorAvailability = ({ actors, actorAvailability, setActorAvailability, on
 
   const toggleActorAvailability = async (dateStr) => {
     if (!selectedActor) return
-    
+
     const isAvailable = !actorDates[dateStr]
     const newDates = { ...actorDates, [dateStr]: isAvailable }
-    
+
     if (!isAvailable) {
       delete newDates[dateStr]
     }
-    
+
     try {
       await axios.post(`/api/actor-availability`, {
         actorName: selectedActor,
         date: dateStr,
         available: isAvailable
       }, getAuthHeaders())
-      
+
       setActorDates(newDates)
     } catch (error) {
       console.error('Error updating actor availability:', error)
@@ -1696,13 +1696,13 @@ const ActorAvailability = ({ actors, actorAvailability, setActorAvailability, on
           const dateStr = formatDate(new Date(year, month, day))
           const isAvailable = actorDates[dateStr]
           const today = new Date()
-          const isToday = today.getFullYear() === year && 
-                         today.getMonth() === month && 
+          const isToday = today.getFullYear() === year &&
+                         today.getMonth() === month &&
                          today.getDate() === day
-          
+
           days.push(
-            <td 
-              key={dateStr} 
+            <td
+              key={dateStr}
               style={{
                 padding: '10px',
                 textAlign: 'center',
@@ -1734,22 +1734,22 @@ const ActorAvailability = ({ actors, actorAvailability, setActorAvailability, on
   return (
     <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ 
+      <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr auto 1fr',
-        alignItems: 'center', 
-        background: 'rgba(255,255,255,0.9)', 
-        padding: '15px 20px', 
-        borderRadius: '12px', 
+        alignItems: 'center',
+        background: 'rgba(255,255,255,0.9)',
+        padding: '15px 20px',
+        borderRadius: '12px',
         marginBottom: '20px',
         backdropFilter: 'blur(8px)',
         boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
       }}>
         <div></div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <img 
-            src="/lakomika-logo.svg" 
-            alt="LA KOMIKA" 
+          <img
+            src="/lakomika-logo.svg"
+            alt="LA KOMIKA"
             style={{ height: '90px', width: 'auto' }}
           />
         </div>
@@ -1795,7 +1795,7 @@ const ActorAvailability = ({ actors, actorAvailability, setActorAvailability, on
             <option key={name} value={name}>{name}</option>
           ))}
         </select>
-        
+
         {selectedActor && (
           <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
             💡 Kliknite na dátumy v kalendári pre označenie dostupnosti herca <strong>{selectedActor}</strong>
@@ -1828,8 +1828,8 @@ const ActorAvailability = ({ actors, actorAvailability, setActorAvailability, on
             }}>
               ← Predchádzajúci
             </button>
-            
-            <h2 style={{ 
+
+            <h2 style={{
               margin: 0,
               color: '#8B1538',
               fontSize: '1.5rem',
@@ -1837,7 +1837,7 @@ const ActorAvailability = ({ actors, actorAvailability, setActorAvailability, on
             }}>
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
             </h2>
-            
+
             <button onClick={nextMonth} style={{
               background: 'rgba(139, 21, 56, 0.1)',
               border: '1px solid #8B1538',
@@ -1879,9 +1879,9 @@ const ActorAvailability = ({ actors, actorAvailability, setActorAvailability, on
                 {renderCalendar()}
               </tbody>
             </table>
-            
+
             {/* Legend */}
-            <div style={{ 
+            <div style={{
               marginTop: '20px',
               padding: '15px',
               background: '#f8f9fa',
@@ -2016,12 +2016,12 @@ const PlayRepertoire = ({ plays, setPlays, actors, onBack, user, showModal }) =>
     if (!newPlay.name.trim()) {
       return false
     }
-    
+
     // Check if at least one character has at least one assigned actor
-    const hasAssignedActor = newPlay.characters.some(character => 
+    const hasAssignedActor = newPlay.characters.some(character =>
       character.actors.some(actor => actor.trim())
     )
-    
+
     return hasAssignedActor
   }
 
@@ -2029,22 +2029,22 @@ const PlayRepertoire = ({ plays, setPlays, actors, onBack, user, showModal }) =>
     return (
       <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ 
+        <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr auto 1fr',
-          alignItems: 'center', 
-          background: 'rgba(255,255,255,0.9)', 
-          padding: '15px 20px', 
-          borderRadius: '12px', 
+          alignItems: 'center',
+          background: 'rgba(255,255,255,0.9)',
+          padding: '15px 20px',
+          borderRadius: '12px',
           marginBottom: '20px',
           backdropFilter: 'blur(8px)',
           boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
         }}>
           <div></div>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <img 
-              src="/lakomika-logo.svg" 
-              alt="LA KOMIKA" 
+            <img
+              src="/lakomika-logo.svg"
+              alt="LA KOMIKA"
               style={{ height: '90px', width: 'auto' }}
             />
           </div>
@@ -2073,7 +2073,7 @@ const PlayRepertoire = ({ plays, setPlays, actors, onBack, user, showModal }) =>
           boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
         }}>
           <h3 style={{ color: '#8B1538', marginBottom: '15px' }}>Detaily hry</h3>
-          
+
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#555' }}>Názov hry:</label>
             <input
@@ -2091,7 +2091,7 @@ const PlayRepertoire = ({ plays, setPlays, actors, onBack, user, showModal }) =>
               }}
             />
           </div>
-          
+
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#555' }}>Popis:</label>
             <textarea
@@ -2166,7 +2166,7 @@ const PlayRepertoire = ({ plays, setPlays, actors, onBack, user, showModal }) =>
                   </button>
                 )}
               </div>
-              
+
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#555' }}>Názov postavy:</label>
                 <input
@@ -2184,7 +2184,7 @@ const PlayRepertoire = ({ plays, setPlays, actors, onBack, user, showModal }) =>
                   }}
                 />
               </div>
-              
+
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <label style={{ fontWeight: '500', color: '#555' }}>Herci (alternácie):</label>
@@ -2203,7 +2203,7 @@ const PlayRepertoire = ({ plays, setPlays, actors, onBack, user, showModal }) =>
                     + Pridať alternáciu
                   </button>
                 </div>
-                
+
                 {character.actors.map((actor, actorIndex) => (
                   <div key={actorIndex} style={{ display: 'flex', gap: '10px', marginBottom: '8px', alignItems: 'center' }}>
                     <select
@@ -2286,13 +2286,13 @@ const PlayRepertoire = ({ plays, setPlays, actors, onBack, user, showModal }) =>
   return (
     <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ 
+      <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr auto 1fr',
-        alignItems: 'center', 
-        background: 'rgba(255,255,255,0.9)', 
-        padding: '15px 20px', 
-        borderRadius: '12px', 
+        alignItems: 'center',
+        background: 'rgba(255,255,255,0.9)',
+        padding: '15px 20px',
+        borderRadius: '12px',
         marginBottom: '20px',
         backdropFilter: 'blur(8px)',
         boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
@@ -2315,9 +2315,9 @@ const PlayRepertoire = ({ plays, setPlays, actors, onBack, user, showModal }) =>
           </button>
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <img 
-            src="/lakomika-logo.svg" 
-            alt="LA KOMIKA" 
+          <img
+            src="/lakomika-logo.svg"
+            alt="LA KOMIKA"
             style={{ height: '90px', width: 'auto' }}
           />
         </div>
@@ -2385,7 +2385,7 @@ const PlayRepertoire = ({ plays, setPlays, actors, onBack, user, showModal }) =>
                       {play.description && (
                         <p style={{ color: '#666', margin: '0 0 15px 0', lineHeight: '1.4' }}>{play.description}</p>
                       )}
-                      
+
                       <div style={{ marginTop: '15px' }}>
                         <h4 style={{ color: '#555', margin: '0 0 10px 0', fontSize: '1rem' }}>Postavy ({play.characters?.length || 0}):</h4>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -2403,7 +2403,7 @@ const PlayRepertoire = ({ plays, setPlays, actors, onBack, user, showModal }) =>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div style={{ display: 'flex', gap: '8px', marginLeft: '20px' }}>
                       <button
                         onClick={() => startEditPlay(play)}
@@ -2483,7 +2483,7 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
     try {
       const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
       const allAvailability = {}
-      
+
       // Load availability for each actor
       for (const actorName of Object.keys(actors)) {
         try {
@@ -2494,7 +2494,7 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
           allAvailability[actorName] = {}
         }
       }
-      
+
       setActorAvailabilityData(allAvailability)
     } catch (error) {
       console.error('Error loading actor availability:', error)
@@ -2506,12 +2506,12 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
     const daysInMonth = new Date(year, month + 1, 0).getDate()
-    
+
     // Check each day of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = formatDate(new Date(year, month, day))
       availability[dateStr] = {}
-      
+
       // Check each play
       Object.entries(plays).forEach(([playId, play]) => {
         const canBePerformed = canPlayBePerformed(play, dateStr)
@@ -2532,7 +2532,7 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
         }
       })
     }
-    
+
     setPlayAvailability(availability)
   }
 
@@ -2540,16 +2540,16 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
     if (!play.characters || play.characters.length === 0) {
       return { possible: false, casting: {}, missingActors: ['No characters defined'] }
     }
-    
+
     const casting = {}
     const missingActors = []
     let allCharactersCovered = true
-    
+
     // Check each character
     play.characters.forEach((character, characterIndex) => {
       let characterCovered = false
       let availableActors = []
-      
+
       // Check each actor assigned to this character
       if (character.actors && character.actors.length > 0) {
         for (const actorName of character.actors) {
@@ -2560,7 +2560,7 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
           }
         }
       }
-      
+
       if (characterCovered) {
         casting[characterIndex] = availableActors // Store all available actors
       } else {
@@ -2568,7 +2568,7 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
         missingActors.push(`${character.name}: ${character.actors?.filter(a => a).join(', ') || 'No actors assigned'}`)
       }
     })
-    
+
     return {
       possible: allCharactersCovered,
       casting,
@@ -2592,7 +2592,7 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
     const dayAvailability = playAvailability[dateStr] || {}
     const availablePlays = Object.entries(dayAvailability).filter(([playId, play]) => play.possible)
     const unavailablePlays = Object.entries(dayAvailability).filter(([playId, play]) => !play.possible)
-    
+
     setDateDetails({
       date: dateStr,
       availablePlays,
@@ -2624,10 +2624,10 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
           const availablePlays = Object.entries(dayAvailability).filter(([playId, play]) => play.possible)
           const totalPlays = Object.keys(dayAvailability).length
           const today = new Date()
-          const isToday = today.getFullYear() === year && 
-                         today.getMonth() === month && 
+          const isToday = today.getFullYear() === year &&
+                         today.getMonth() === month &&
                          today.getDate() === day
-          
+
           // Determine cell background color based on availability
           let cellBackground = 'white'
           if (isToday) {
@@ -2637,10 +2637,10 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
           } else if (totalPlays > 0) {
             cellBackground = '#f8d7da' // No plays available - red
           }
-          
+
           days.push(
-            <td 
-              key={dateStr} 
+            <td
+              key={dateStr}
               style={{
                 padding: '4px',
                 textAlign: 'center',
@@ -2654,7 +2654,7 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
               }}
               onClick={() => showDateDetails(dateStr)}
             >
-              <div style={{ 
+              <div style={{
                 fontWeight: isToday ? 'bold' : 'normal',
                 color: isToday ? '#856404' : '#333',
                 marginBottom: '4px',
@@ -2662,10 +2662,10 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
               }}>
                 {day}
               </div>
-              
+
               {/* Show available plays */}
               {availablePlays.slice(0, 3).map(([playId, play]) => (
-                <div 
+                <div
                   key={playId}
                   style={{
                     background: '#28a745',
@@ -2682,7 +2682,7 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
                   {play.name}
                 </div>
               ))}
-              
+
               {/* Show "and more" if there are more available plays */}
               {availablePlays.length > 3 && (
                 <div style={{
@@ -2708,22 +2708,22 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ 
+      <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr auto 1fr',
-        alignItems: 'center', 
-        background: 'rgba(255,255,255,0.9)', 
-        padding: '15px 20px', 
-        borderRadius: '12px', 
+        alignItems: 'center',
+        background: 'rgba(255,255,255,0.9)',
+        padding: '15px 20px',
+        borderRadius: '12px',
         marginBottom: '20px',
         backdropFilter: 'blur(8px)',
         boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
       }}>
         <div></div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <img 
-            src="/lakomika-logo.svg" 
-            alt="LA KOMIKA" 
+          <img
+            src="/lakomika-logo.svg"
+            alt="LA KOMIKA"
             style={{ height: '90px', width: 'auto' }}
           />
         </div>
@@ -2766,8 +2766,8 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
         }}>
           ← Predchádzajúci
         </button>
-        
-        <h2 style={{ 
+
+        <h2 style={{
           margin: 0,
           color: '#8B1538',
           fontSize: '1.5rem',
@@ -2775,7 +2775,7 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
         }}>
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
         </h2>
-        
+
         <button onClick={nextMonth} style={{
           background: 'rgba(139, 21, 56, 0.1)',
           border: '1px solid #8B1538',
@@ -2817,9 +2817,9 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
             {renderCalendar()}
           </tbody>
         </table>
-        
+
         {/* Legend */}
-        <div style={{ 
+        <div style={{
           marginTop: '20px',
           padding: '15px',
           background: '#f8f9fa',
@@ -2902,7 +2902,7 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
             {/* Available Plays */}
             {dateDetails.availablePlays && dateDetails.availablePlays.length > 0 && (
               <div style={{ marginBottom: '25px' }}>
-                <h4 style={{ 
+                <h4 style={{
                   color: '#28a745',
                   margin: '0 0 15px 0',
                   display: 'flex',
@@ -2942,7 +2942,7 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
             {/* Unavailable Plays */}
             {dateDetails.unavailablePlays && dateDetails.unavailablePlays.length > 0 && (
               <div style={{ marginBottom: '20px' }}>
-                <h4 style={{ 
+                <h4 style={{
                   color: '#dc3545',
                   margin: '0 0 15px 0',
                   display: 'flex',
@@ -2977,7 +2977,7 @@ const PlayPlanner = ({ plays, actors, actorAvailability, onBack, user, showModal
             )}
 
             {/* No plays defined */}
-            {(!dateDetails.availablePlays || dateDetails.availablePlays.length === 0) && 
+            {(!dateDetails.availablePlays || dateDetails.availablePlays.length === 0) &&
              (!dateDetails.unavailablePlays || dateDetails.unavailablePlays.length === 0) && (
               <div style={{
                 textAlign: 'center',
