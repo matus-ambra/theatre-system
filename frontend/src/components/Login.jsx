@@ -153,20 +153,6 @@ const Login = ({ onLogin }) => {
         </div>
       )}
       
-      {/* Quick login hints for mobile */}
-      {isMobile && (
-        <div style={{
-          marginTop: '20px',
-          padding: '15px',
-          background: 'rgba(139, 21, 56, 0.05)',
-          borderRadius: '8px',
-          fontSize: '14px',
-          color: '#666',
-          textAlign: 'center'
-        }}>
-          💡 Tip: Použite heslo podľa vašej roli v systéme
-        </div>
-      )}
     </div>
   )
 }

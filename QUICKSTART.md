@@ -61,7 +61,7 @@ git push -u origin main
      - **Root Directory**: `frontend`
      - **Build**: `npm install && npm run build`
      - **Publish**: `dist`
-   - Add Rewrite Rule:
+   - Add Rewrite Rule: I COULDN'T FIND THIS OPTION
      - Source: `/*`
      - Destination: `/index.html`
      - Action: `Rewrite`

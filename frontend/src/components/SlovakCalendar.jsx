@@ -909,7 +909,7 @@ const EditWorkers = ({ workersList, setWorkersList, onSave, onCancel, user, show
   // Auto-save function
   const autoSaveWorkers = async (updatedWorkers) => {
     try {
-      await api.post('/api/workers-colors-save', updatedWorkers, getAuthHeaders())
+      await api.post('/api/workers-colors', updatedWorkers, getAuthHeaders())
       setWorkersList(updatedWorkers)
       await onSave()
     } catch (error) {
@@ -1107,6 +1107,7 @@ const TheatreManagement = ({ onCancel, user, showModal }) => {
   const [actors, setActors] = useState({})
   const [plays, setPlays] = useState({})
   const [actorAvailability, setActorAvailability] = useState({})
+  const { isMobile, isSmallMobile } = useResponsive()
 
   const getAuthHeaders = () => ({
     headers: { Authorization: `Bearer ${user.token}` }
