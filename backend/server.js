@@ -94,7 +94,7 @@ app.post('/api/login', (req, res) => {
 });
 
 // Admin routes
-app.get('/api/admin/workers', authenticateToken, async (req, res) => {
+app.post('/api/admin/workers', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
@@ -141,7 +141,7 @@ app.delete('/api/admin/workers/:id', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/api/admin/calendar-labels', authenticateToken, async (req, res) => {
+app.post('/api/admin/calendar-labels', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
@@ -174,7 +174,7 @@ app.post('/api/admin/calendar-labels', authenticateToken, async (req, res) => {
 });
 
 // Shared route for calendar data with assignments
-app.get('/api/calendar-data', authenticateToken, async (req, res) => {
+app.post('/api/calendar-data', authenticateToken, async (req, res) => {
   const queryText = `
     SELECT
       cl.*,
@@ -216,7 +216,7 @@ app.get('/api/calendar-data', authenticateToken, async (req, res) => {
 });
 
 // Worker routes
-app.get('/api/worker/available-slots', authenticateToken, async (req, res) => {
+app.post('/api/worker/available-slots', authenticateToken, async (req, res) => {
   if (req.user.role !== 'worker') {
     return res.status(403).json({ error: 'Worker access required' });
   }
@@ -241,7 +241,7 @@ app.get('/api/worker/available-slots', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/api/workers', authenticateToken, async (req, res) => {
+app.post('/api/workers', authenticateToken, async (req, res) => {
   try {
     const workers = await getAll("SELECT * FROM workers ORDER BY name");
     res.json(workers);
@@ -253,7 +253,7 @@ app.get('/api/workers', authenticateToken, async (req, res) => {
 
 // Simplified endpoints for Slovak version compatibility
 // Get month data in the format expected by the frontend
-app.get('/api/month/:yearMonth', authenticateToken, async (req, res) => {
+app.post('/api/month/:yearMonth', authenticateToken, async (req, res) => {
   const { yearMonth } = req.params;
 
   console.log(`Loading month data for: ${yearMonth}`);
@@ -386,7 +386,7 @@ app.post('/api/calendar/:date', authenticateToken, async (req, res) => {
   console.log(`User role: ${req.user.role}`);
 
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
 
@@ -416,7 +416,7 @@ app.post('/api/calendar/:date', authenticateToken, async (req, res) => {
     const finalWorkersNeeded = workersNeeded ||
       (req.user.role === 'worker' && originalWorkersNeeded ? originalWorkersNeeded : 2);
     console.log('Inserting new label into database:', { date, label, workers_needed: finalWorkersNeeded });
-    
+
     const labelResult = await client.query(
       'INSERT INTO calendar_labels (date, label, workers_needed) VALUES ($1, $2, $3) RETURNING id',
       [date, label, finalWorkersNeeded]
@@ -429,7 +429,7 @@ app.post('/api/calendar/:date', authenticateToken, async (req, res) => {
       for (const workerName of workers) {
         // Find or create worker
         let workerResult = await client.query('SELECT id FROM workers WHERE name = $1', [workerName]);
-        
+
         let workerId;
         if (workerResult.rows.length > 0) {
           workerId = workerResult.rows[0].id;
@@ -465,9 +465,9 @@ app.post('/api/calendar/:date', authenticateToken, async (req, res) => {
 });
 
 // Get workers with colors
-app.get('/api/workers-colors', authenticateToken, async (req, res) => {
+app.post('/api/workers-colors', authenticateToken, async (req, res) => {
   console.log('Getting workers with colors for user role:', req.user.role);
-  
+
   try {
     const workers = await getAll('SELECT name, color FROM workers WHERE active = true ORDER BY name');
 
@@ -487,7 +487,7 @@ app.get('/api/workers-colors', authenticateToken, async (req, res) => {
 // POST version for workers-colors-get (frontend compatibility)
 app.post('/api/workers-colors-get', authenticateToken, async (req, res) => {
   console.log('Getting workers with colors for user role:', req.user.role);
-  
+
   try {
     const workers = await getAll('SELECT name, color FROM workers WHERE active = true ORDER BY name');
 
@@ -514,7 +514,7 @@ app.post('/api/workers-colors', authenticateToken, async (req, res) => {
   console.log('Saving workers:', workerColors);
 
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
 
@@ -629,7 +629,7 @@ app.post('/api/worker-schedule/:workerName/:yearMonth', authenticateToken, async
 });
 
 // Actors management endpoints
-app.get('/api/actors', authenticateToken, async (req, res) => {
+app.post('/api/actors', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
@@ -691,7 +691,7 @@ app.delete('/api/actors/:name', authenticateToken, async (req, res) => {
 app.use('/api/plays', playsRouter);
 
 // Actor availability endpoints
-app.get('/api/actor-availability/:actorName/:yearMonth', authenticateToken, async (req, res) => {
+app.post('/api/actor-availability/:actorName/:yearMonth', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
@@ -745,7 +745,7 @@ app.post('/api/actor-availability', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/api/actor-availability', authenticateToken, async (req, res) => {
+app.post('/api/actor-availability', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
@@ -753,7 +753,7 @@ app.get('/api/actor-availability', authenticateToken, async (req, res) => {
 });
 
 // Planned plays endpoints
-app.get('/api/planned-plays/:yearMonth', authenticateToken, async (req, res) => {
+app.post('/api/planned-plays/:yearMonth', authenticateToken, async (req, res) => {
   const { yearMonth } = req.params;
   const yearMonthPattern = `${yearMonth}-%`;
 
@@ -815,7 +815,7 @@ app.delete('/api/planned-plays/:date', authenticateToken, async (req, res) => {
 });
 
 // Health check endpoint for Render
-app.get('/api/health', (req, res) => {
+app.post('/api/health', (req, res) => {
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),

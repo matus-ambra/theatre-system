@@ -207,7 +207,7 @@ app.post('/api/login', (req, res) => {
 });
 
 // Admin routes
-app.get('/api/admin/workers', authenticateToken, (req, res) => {
+app.post('/api/admin/workers', authenticateToken, (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
@@ -248,7 +248,7 @@ app.delete('/api/admin/workers/:id', authenticateToken, (req, res) => {
   });
 });
 
-app.get('/api/admin/calendar-labels', authenticateToken, (req, res) => {
+app.post('/api/admin/calendar-labels', authenticateToken, (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
@@ -277,7 +277,7 @@ app.post('/api/admin/calendar-labels', authenticateToken, (req, res) => {
 });
 
 // Shared route for calendar data with assignments
-app.get('/api/calendar-data', authenticateToken, (req, res) => {
+app.post('/api/calendar-data', authenticateToken, (req, res) => {
   const query = `
     SELECT
       cl.*,
@@ -318,7 +318,7 @@ app.get('/api/calendar-data', authenticateToken, (req, res) => {
 });
 
 // Worker routes
-app.get('/api/worker/available-slots', authenticateToken, (req, res) => {
+app.post('/api/worker/available-slots', authenticateToken, (req, res) => {
   if (req.user.role !== 'worker') {
     return res.status(403).json({ error: 'Worker access required' });
   }
@@ -342,7 +342,7 @@ app.get('/api/worker/available-slots', authenticateToken, (req, res) => {
   });
 });
 
-app.get('/api/workers', authenticateToken, (req, res) => {
+app.post('/api/workers', authenticateToken, (req, res) => {
   db.all("SELECT * FROM workers ORDER BY name", (err, workers) => {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
@@ -353,7 +353,7 @@ app.get('/api/workers', authenticateToken, (req, res) => {
 
 // Simplified endpoints for Slovak version compatibility
 // Get month data in the format expected by the frontend
-app.get('/api/month/:yearMonth', authenticateToken, (req, res) => {
+app.post('/api/month/:yearMonth', authenticateToken, (req, res) => {
   const { yearMonth } = req.params;
   const [year, month] = yearMonth.split('-').map(Number);
 
@@ -578,7 +578,7 @@ app.post('/api/calendar/:date', authenticateToken, (req, res) => {
 });
 
 // Get workers with colors
-app.get('/api/workers-colors', authenticateToken, (req, res) => {
+app.post('/api/workers-colors', authenticateToken, (req, res) => {
   console.log('Getting workers with colors for user role:', req.user.role);
   db.all(`SELECT name, color FROM workers WHERE active = 1 ORDER BY name`, (err, workers) => {
     if (err) {
@@ -752,7 +752,7 @@ app.post('/api/worker-schedule/:workerName/:yearMonth', authenticateToken, (req,
 });
 
 // Actors management endpoints
-app.get('/api/actors', authenticateToken, (req, res) => {
+app.post('/api/actors', authenticateToken, (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
@@ -811,7 +811,7 @@ app.delete('/api/actors/:name', authenticateToken, (req, res) => {
 app.use('/api/plays', playsRouter);
 
 // Actor availability endpoints
-app.get('/api/actor-availability/:actorName/:yearMonth', authenticateToken, (req, res) => {
+app.post('/api/actor-availability/:actorName/:yearMonth', authenticateToken, (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
@@ -871,7 +871,7 @@ app.post('/api/actor-availability', authenticateToken, (req, res) => {
   }
 });
 
-app.get('/api/actor-availability', authenticateToken, (req, res) => {
+app.post('/api/actor-availability', authenticateToken, (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
@@ -879,7 +879,7 @@ app.get('/api/actor-availability', authenticateToken, (req, res) => {
 });
 
 // Planned plays endpoints
-app.get('/api/planned-plays/:yearMonth', authenticateToken, (req, res) => {
+app.post('/api/planned-plays/:yearMonth', authenticateToken, (req, res) => {
   const { yearMonth } = req.params;
   const yearMonthPattern = `${yearMonth}-%`;
 
@@ -946,7 +946,7 @@ app.delete('/api/planned-plays/:date', authenticateToken, (req, res) => {
 });
 
 // Health check endpoint for Render
-app.get('/api/health', (req, res) => {
+app.post('/api/health', (req, res) => {
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
