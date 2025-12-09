@@ -68,7 +68,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
       setError('') // Clear any previous errors
     } catch (error) {
       console.error('Error saving data:', error)
-      setError('Chyba pri uklačaní: ' + (error.response?.data?.error || error.message))
+      setError('Chyba pri ukladaní: ' + (error.response?.data?.error || error.message))
     }
   }
 
@@ -202,7 +202,7 @@ const SlovakCalendar = ({ user, onLogout }) => {
   const exportMyCalendar = async (workerName, yearMonth) => {
     try {
       // Fetch worker assignments for the specific month
-      const response = await api.get(`/api/worker-schedule/${workerName}/${yearMonth}`, {}, getAuthHeaders())
+      const response = await api.post(`/api/worker-schedule/${workerName}/${yearMonth}`, {}, getAuthHeaders())
       const assignments = response.data
 
       if (assignments.length === 0) {
